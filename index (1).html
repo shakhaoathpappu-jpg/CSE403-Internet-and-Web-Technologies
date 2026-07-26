@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="HTML Practice Project">
+    <meta name="keywords" content="HTML, Practice">
+    <title>HTML Practice Project</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* ---- Design tokens ---- */
+            --bg-editor: #131826;      /* deep navy "editor" chrome */
+            --bg-editor-alt: #1B2233;
+            --bg-paper: #F3F5F9;       /* cool paper background */
+            --bg-card: #FFFFFF;
+            --ink: #1A2238;            /* primary text */
+            --muted: #626A82;          /* secondary text */
+            --line: #DDE2EC;           /* hairline rules */
+            --tag: #D6455D;            /* HTML tag red */
+            --attr: #3B6EA5;           /* attribute blue */
+            --string: #1B8A70;         /* string / value teal */
+            --amber: #C98A2A;          /* comment / warning amber */
+
+            --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+            --font-sans: 'Inter', -apple-system, sans-serif;
+        }
+
+        * { box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            * { animation: none !important; transition: none !important; }
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg-paper);
+            color: var(--ink);
+            font-family: var(--font-sans);
+            line-height: 1.7;
+            font-size: 16px;
+        }
+
+        a { color: var(--attr); text-decoration: none; border-bottom: 1px solid transparent; }
+        a:hover, a:focus-visible { border-bottom-color: var(--attr); }
+        a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+            outline: 2px solid var(--attr);
+            outline-offset: 2px;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--line);
+            margin: 0;
+        }
+
+        /* ---- Editor-style title bar (header) ---- */
+        header {
+            background: linear-gradient(180deg, var(--bg-editor) 0%, var(--bg-editor-alt) 100%);
+            color: #EAEDF7;
+            padding: 2.5rem 1.5rem 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: "";
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            background: var(--tag);
+            box-shadow: 22px 0 0 var(--amber), 44px 0 0 var(--string);
+        }
+
+        header .eyebrow {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: #8A93B3;
+            margin: 3rem 0 0.75rem;
+            letter-spacing: 0.02em;
+        }
+
+        header h1 {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            font-size: clamp(1.8rem, 5vw, 2.75rem);
+            margin: 0 0 0.6rem;
+            letter-spacing: -0.01em;
+        }
+
+        header h1::before { content: "<h1> "; color: var(--tag); }
+        header h1::after { content: " </h1>"; color: var(--tag); }
+        header h1 .tag-open, header h1 .tag-close { color: var(--tag); }
+
+        header p {
+            font-size: 1.05rem;
+            color: #B7BEDA;
+            margin: 0;
+            max-width: 40em;
+        }
+
+        header hr { display: none; }
+
+        /* ---- Nav styled as browser tab bar ---- */
+        nav {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--line);
+            padding: 0 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 1px 0 rgba(19, 24, 38, 0.03);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0;
+        }
+
+        nav a {
+            display: inline-block;
+            padding: 0.9rem 1rem;
+            color: var(--muted);
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+        }
+
+        nav a:hover, nav a:focus-visible {
+            color: var(--tag);
+            border-bottom-color: var(--tag);
+        }
+
+        /* the literal " | " separators from the original markup */
+        nav { color: transparent; }
+        nav a { color: var(--muted); }
+
+        nav + hr, section + hr, header + hr { display: none; }
+
+        /* ---- Section shell: every section reads like an inspected DOM node ---- */
+        section, footer {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem;
+        }
+
+        section + hr { display: none; }
+
+        body > hr { display: none; } /* all horizontal rules replaced by section rhythm/border */
+
+        section {
+            border-bottom: 1px solid var(--line);
+        }
+
+        section::before {
+            content: attr(data-tag);
+            display: inline-block;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            color: var(--muted);
+            background: var(--bg-card);
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            padding: 0.2rem 0.55rem;
+            margin-bottom: 1.25rem;
+        }
+
+        h2 {
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--ink);
+            margin: 0 0 1.25rem;
+        }
+
+        h2::before { content: "<"; color: var(--tag); }
+        h2::after { content: ">"; color: var(--tag); }
+
+        h3 {
+            font-family: var(--font-mono);
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--attr);
+            margin: 1.75rem 0 0.75rem;
+        }
+
+        p { margin: 0 0 1rem; color: var(--ink); }
+
+        strong, b { color: var(--tag); font-weight: 600; }
+        em, i { color: var(--attr); }
+        u { text-decoration-color: var(--string); }
+        mark {
+            background: #FDF0C6;
+            color: var(--ink);
+            padding: 0.05em 0.3em;
+            border-radius: 3px;
+        }
+        small { color: var(--muted); }
+        sub, sup { color: var(--attr); }
+        del { color: var(--muted); }
+        ins {
+            color: var(--string);
+            text-decoration: none;
+            font-weight: 600;
+            background: #E4F5EE;
+            padding: 0 0.3em;
+            border-radius: 3px;
+        }
+
+        /* ---- Image ---- */
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            display: block;
+        }
+
+        /* ---- Lists ---- */
+        ul, ol, dl { padding-left: 1.4rem; margin: 0 0 1rem; }
+        li { margin-bottom: 0.4rem; }
+
+        section ul:not(nav ul) li a {
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+        }
+
+        dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.35rem 1rem; padding-left: 0; }
+        dt { font-family: var(--font-mono); font-weight: 600; color: var(--tag); }
+        dd { margin: 0; color: var(--muted); }
+
+        /* ---- Table ---- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+            background: var(--bg-card);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--line) !important;
+        }
+
+        th, td {
+            padding: 0.7rem 0.9rem;
+            text-align: left;
+            border: 1px solid var(--line) !important;
+        }
+
+        th {
+            background: var(--bg-editor);
+            color: #EAEDF7;
+            font-family: var(--font-mono);
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        tr:nth-child(even) td { background: #F8F9FC; }
+
+        /* ---- Form ---- */
+        form {
+            background: var(--bg-card);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 1.75rem;
+        }
+
+        form label {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--muted);
+            display: block;
+            margin-bottom: 0.35rem;
+        }
+
+        form br { content: ""; display: block; margin-bottom: 0.6rem; }
+
+        input, select, textarea, button {
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+        }
+
+        input[type="text"], input[type="email"], input[type="password"],
+        input[type="tel"], input[type="number"], input[type="date"],
+        select, textarea {
+            width: 100%;
+            max-width: 360px;
+            padding: 0.55rem 0.7rem;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: var(--bg-paper);
+            color: var(--ink);
+        }
+
+        input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus,
+        input[type="tel"]:focus, input[type="number"]:focus, input[type="date"]:focus,
+        select:focus, textarea:focus {
+            border-color: var(--attr);
+        }
+
+        input[type="radio"], input[type="checkbox"] {
+            accent-color: var(--tag);
+            margin-right: 0.3rem;
+        }
+
+        input[type="file"] { font-size: 0.85rem; }
+
+        button {
+            font-family: var(--font-mono);
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 0.65rem 1.3rem;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            margin-right: 0.6rem;
+        }
+
+        button[type="submit"] {
+            background: var(--tag);
+            color: #fff;
+        }
+        button[type="submit"]:hover { background: #B93A50; }
+
+        button[type="reset"] {
+            background: transparent;
+            color: var(--muted);
+            border-color: var(--line);
+        }
+        button[type="reset"]:hover { border-color: var(--muted); color: var(--ink); }
+
+        /* ---- Audio / Video ---- */
+        audio, video {
+            width: 100%;
+            max-width: 420px;
+            border-radius: 8px;
+        }
+
+        /* ---- iframe (map) ---- */
+        iframe {
+            width: 100%;
+            max-width: 500px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+        }
+
+        /* ---- Details ---- */
+        details {
+            background: var(--bg-card);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 0.9rem 1.1rem;
+        }
+        summary {
+            font-family: var(--font-mono);
+            font-weight: 600;
+            color: var(--attr);
+            cursor: pointer;
+        }
+        details p { margin-top: 0.75rem; margin-bottom: 0; }
+
+        /* ---- Footer ---- */
+        footer {
+            background: var(--bg-editor);
+            color: #B7BEDA;
+            border-top: 1px solid var(--line);
+            max-width: 100%;
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+        }
+        footer::before { display: none; }
+        footer h3 {
+            color: #EAEDF7;
+            font-family: var(--font-mono);
+        }
+        footer p { color: #B7BEDA; }
+
+        @media (max-width: 600px) {
+            section, footer { padding: 2.25rem 1.25rem; }
+            header { padding: 2rem 1.25rem 2.5rem; }
+            table { font-size: 0.85rem; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header>
+        <p class="eyebrow">&lt;!-- a tour through the basics --&gt;</p>
+        <h1>HTML Practice Project</h1>
+        <p>Learn Almost Every Basic HTML Tag in One Project</p>
+        <hr>
+    </header>
+
+    <!-- Navigation -->
+    <nav>
+        <a href="#about">About</a>
+        <a href="#courses">Courses</a>
+        <a href="#table">Table</a>
+        <a href="#form">Registration</a>
+        <a href="#contact">Contact</a>
+    </nav>
+
+    <hr>
+
+    <!-- About -->
+    <section id="about" data-tag="section#about">
+
+        <h2>About HTML</h2>
+
+        <p>
+            HTML stands for
+            <strong>Hyper Text Markup Language</strong>.
+            It is used to create <b>web pages</b>.
+        </p>
+
+        <p>
+            HTML is <i>easy</i>,
+            <em>interesting</em>,
+            <u>powerful</u>,
+            <mark>important</mark>,
+            and <small>beginner friendly.</small>
+        </p>
+
+        <p>
+            Water Formula = H<sub>2</sub>O
+        </p>
+
+        <p>
+            x<sup>2</sup> + y<sup>2</sup>
+        </p>
+
+        <p>
+            Price:
+            <del>$100</del>
+            <ins>$70</ins>
+        </p>
+
+    </section>
+
+    <hr>
+
+    <!-- Image -->
+
+    <section data-tag="section.image">
+
+        <h2>Image Example</h2>
+
+        <img src="https://picsum.photos/400/250"
+            alt="Random Image"
+            width="400">
+
+    </section>
+
+    <hr>
+
+    <!-- Links -->
+
+    <section data-tag="section.links">
+
+        <h2>Useful Links</h2>
+
+        <ul>
+
+            <li>
+                <a href="https://www.google.com" target="_blank">
+                    Google
+                </a>
+            </li>
+
+            <li>
+                <a href="https://www.github.com" target="_blank">
+                    GitHub
+                </a>
+            </li>
+
+            <li>
+                <a href="mailto:example@gmail.com">
+                    Email Us
+                </a>
+            </li>
+
+            <li>
+                <a href="tel:+8801234567890">
+                    Call Us
+                </a>
+            </li>
+
+        </ul>
+
+    </section>
+
+    <hr>
+
+    <!-- Lists -->
+
+    <section id="courses" data-tag="section#courses">
+
+        <h2>Courses</h2>
+
+        <h3>Ordered List</h3>
+
+        <ol>
+
+            <li>HTML</li>
+            <li>CSS</li>
+            <li>JavaScript</li>
+            <li>Bootstrap</li>
+
+        </ol>
+
+        <h3>Unordered List</h3>
+
+        <ul>
+
+            <li>Programming</li>
+            <li>Web Development</li>
+            <li>Machine Learning</li>
+
+        </ul>
+
+        <h3>Description List</h3>
+
+        <dl>
+
+            <dt>HTML</dt>
+            <dd>Markup Language</dd>
+
+            <dt>CSS</dt>
+            <dd>Style Sheet Language</dd>
+
+        </dl>
+
+    </section>
+
+    <hr>
+
+    <!-- Table -->
+
+    <section id="table" data-tag="section#table">
+
+        <h2>Student Result</h2>
+
+        <table border="1">
+
+            <tr>
+
+                <th>Name</th>
+                <th>ID</th>
+                <th>Department</th>
+                <th>CGPA</th>
+
+            </tr>
+
+            <tr>
+
+                <td>Rahim</td>
+                <td>101</td>
+                <td>CSE</td>
+                <td>3.75</td>
+
+            </tr>
+
+            <tr>
+
+                <td>Karim</td>
+                <td>102</td>
+                <td>CSE</td>
+                <td>3.90</td>
+
+            </tr>
+
+        </table>
+
+    </section>
+
+    <hr>
+
+    <!-- Form -->
+
+    <section id="form" data-tag="section#form">
+
+        <h2>Student Registration Form</h2>
+
+        <form>
+
+            <label>Full Name</label><br>
+            <input type="text"><br><br>
+
+            <label>Email</label><br>
+            <input type="email"><br><br>
+
+            <label>Password</label><br>
+            <input type="password"><br><br>
+
+            <label>Phone</label><br>
+            <input type="tel"><br><br>
+
+            <label>Age</label><br>
+            <input type="number"><br><br>
+
+            <label>Date of Birth</label><br>
+            <input type="date"><br><br>
+
+            <label>Gender</label><br>
+
+            <input type="radio" name="gender"> Male
+            <input type="radio" name="gender"> Female
+
+            <br><br>
+
+            <label>Skills</label><br>
+
+            <input type="checkbox"> HTML
+            <input type="checkbox"> CSS
+            <input type="checkbox"> JavaScript
+
+            <br><br>
+
+            <label>Department</label><br>
+
+            <select>
+
+                <option>CSE</option>
+                <option>EEE</option>
+                <option>BBA</option>
+
+            </select>
+
+            <br><br>
+
+            <label>Upload CV</label><br>
+
+            <input type="file">
+
+            <br><br>
+
+            <label>Message</label><br>
+
+            <textarea rows="5" cols="40"></textarea>
+
+            <br><br>
+
+            <button type="submit">
+                Submit
+            </button>
+
+            <button type="reset">
+                Reset
+            </button>
+
+        </form>
+
+    </section>
+
+    <hr>
+
+    <!-- Audio -->
+
+    <section data-tag="section.audio">
+
+        <h2>Audio</h2>
+
+        <audio controls>
+
+            <source src="audio.mp3">
+
+        </audio>
+
+    </section>
+
+    <hr>
+
+    <!-- Video -->
+
+    <section data-tag="section.video">
+
+        <h2>Video</h2>
+
+        <video width="400" controls>
+
+            <source src="video.mp4">
+
+        </video>
+
+    </section>
+
+    <hr>
+
+    <!-- iframe -->
+
+    <section data-tag="section.map">
+
+        <h2>Google Map</h2>
+
+        <iframe
+            src="https://www.google.com/maps?q=Dhaka&output=embed"
+            width="500"
+            height="300">
+        </iframe>
+
+    </section>
+
+    <hr>
+
+    <!-- Details -->
+
+    <section data-tag="section.details">
+
+        <details>
+
+            <summary>
+                Click Here
+            </summary>
+
+            <p>
+                This is hidden text using Details Tag.
+            </p>
+
+        </details>
+
+    </section>
+
+    <hr>
+
+    <!-- Entities -->
+
+    <section data-tag="section.entities">
+
+        <h2>HTML Entities</h2>
+
+        <p>
+
+            &copy; 2026
+
+            &nbsp;&nbsp;
+
+            HTML
+
+            &amp;
+
+            CSS
+
+        </p>
+
+    </section>
+
+    <hr>
+
+    <!-- Footer -->
+
+    <footer id="contact">
+
+        <h3>Contact</h3>
+
+        <p>Email : example@gmail.com</p>
+
+        <p>Phone : +8801234567890</p>
+
+        <p>&copy; 2026 HTML Practice Project</p>
+
+    </footer>
+
+</body>
+
+</html>
